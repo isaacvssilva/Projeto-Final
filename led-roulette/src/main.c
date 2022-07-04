@@ -194,7 +194,7 @@ static void delay(int iTime){
  */
 void interruptSetup(){
 	/* Interrupt mask */
-	HWREG(SOC_AINTC_REGS+INTC_MIR_CLEAR3) |= (1<<3);//(98 --> Bit 2 do 4º registrador (MIR CLEAR3))
+	HWREG(SOC_AINTC_REGS + INTC_MIR_CLEAR3) |= (1<<3);//(98 --> Bit 2 do 4º registrador (MIR CLEAR3))
 	
 }
 
