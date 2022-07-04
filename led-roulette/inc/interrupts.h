@@ -28,6 +28,6 @@
 #define INTC_SYSSTATUS							0x014
 #define INTC_THRESHOLD							0x068
 
-#define GRUPO_A                     98
-#define GRUPO_B                     99
+#define GRUPO_A                                 98
+#define GRUPO_B                                 99
 #endif
