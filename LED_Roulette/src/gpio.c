@@ -61,6 +61,21 @@ static const CONTROL_MODULE GPIO_CTRL_MODULE_ARRAY[32][4] = {
 
 /* 
  * ===  FUNCTION  ======================================================================
+ *         Name:  disableWdt
+ *  Description:  
+ * =====================================================================================
+ */
+
+void disableWdt(void){
+	HWREG(SOC_WDT_1_REGS + CKM_PER_I2C1_CLKCTRL) = 0xAAAA;
+	while((HWREG(SOC_WDT_1_REGS + CKM_PER_MCASP0_CLKCTRL) & (1<<4)));
+
+	HWREG(SOC_WDT_1_REGS + CKM_PER_I2C1_CLKCTRL) = 0x5555;
+	while((HWREG(SOC_WDT_1_REGS + CKM_PER_MCASP0_CLKCTRL) & (1<<4)));
+}
+
+/* 
+ * ===  FUNCTION  ======================================================================
  *         Name:  gpioCheckValidPortPin
  *  Description:  
  * =====================================================================================

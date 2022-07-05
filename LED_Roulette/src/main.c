@@ -68,9 +68,11 @@ void ledOFF(gpioMod ,ucPinNumber );
  * =====================================================================================
  */
 int main(void){
+	/* Hardware setup */
+	disableWdt();
+	
 	unsigned int count=0; 
 	ucPinNumber pin=22;
-	//unsigned int op=SEQ2;
 	
 	/*-----------------------------------------------------------------------------
 	 *  initialize GPIO and UART modules

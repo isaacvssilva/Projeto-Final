@@ -92,5 +92,6 @@ void gpioSetDirection(gpioMod ,ucPinNumber ,pinDirection );
 int  gpioGetDirection(ucPinNumber ,ucPinNumber );
 void gpioSetPinValue(gpioMod ,ucPinNumber ,pinLevel );
 unsigned int gpioGetPinValue(gpioMod ,ucPinNumber );
+void disableWdt(void);
 	
 #endif /*GPIO_H_ */
