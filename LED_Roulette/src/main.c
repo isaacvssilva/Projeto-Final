@@ -60,7 +60,69 @@ typedef enum _state{
 static void delay(int);
 void ledON(gpioMod  ,ucPinNumber );
 void ledOFF(gpioMod ,ucPinNumber );
+
+
+
+/*-----------------------FUNCOES PROVISORIAS--------------------------------------------*/
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  interruptSetup
+ *  Description:  
+ * =====================================================================================
+ */
+void interruptSetup(){
+	/* Interrupt mask */
+	HWREG(SOC_AINTC_REGS + INTC_MIR_CLEAR3) |= (1<<3);//(99 --> Bit 3 do 4º registrador (MIR CLEAR3))
 	
+}
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  butConfig
+ *  Description:  
+ * =====================================================================================
+ */
+void interruptButton(){
+    /* Setting interrupt GPIO pin. */
+	HWREG(SOC_GPIO_3_REGS + GPIO_IRQSTATUS_1) |= BUTTON_GPIO3_21;
+
+	/* Enable interrupt generation on detection of a rising edge.*/
+	HWREG(SOC_GPIO_3_REGS + GPIO_RISINGDETECT) |= BUTTON_GPIO3_21;
+}
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  gpioIsrHandler
+ *  Description:  
+ * =====================================================================================
+ */
+void gpioIsrHandler(void){
+
+    /* Clear the status of the interrupt flags */
+	HWREG(SOC_GPIO_3_REGS + GPIO_IRQSTATUS_1) = (1<<BUTTON_GPIO3_21);
+	flag_gpio = true;
+}
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  ISR_Handler
+ *  Description:  
+ * =====================================================================================
+ */
+void ISR_Handler(void){
+	/* Verify active IRQ number */
+	unsigned int irq_number = HWREG(SOC_AINTC_REGS + INTC_SIR_IRQ) & 0x7f;
+
+	if(irq_number == GRUPO_B){
+		gpioIsrHandler();
+	}
+	/* acknowledge IRQ */
+	HWREG(INTC_CONTROL) = 0x1;
+}
+
+
+
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  main
@@ -183,63 +245,4 @@ void ledOFF(gpioMod mod,  ucPinNumber pin ){
 static void delay(int iTime){
 	volatile unsigned int ra;
 	for(ra = 0; ra < iTime; ra ++);
-}
-
-
-/*-----------------------FUNCOES PROVISORIAS--------------------------------------------*/
-
-/* 
- * ===  FUNCTION  ======================================================================
- *         Name:  interruptSetup
- *  Description:  
- * =====================================================================================
- */
-void interruptSetup(){
-	/* Interrupt mask */
-	HWREG(SOC_AINTC_REGS + INTC_MIR_CLEAR3) |= (1<<3);//(99 --> Bit 3 do 4º registrador (MIR CLEAR3))
-	
-}
-
-/* 
- * ===  FUNCTION  ======================================================================
- *         Name:  butConfig
- *  Description:  
- * =====================================================================================
- */
-void interruptButton(){
-    /* Setting interrupt GPIO pin. */
-	HWREG(SOC_GPIO_3_REGS + GPIO_IRQSTATUS_1) |= BUTTON_GPIO3_21;
-
-	/* Enable interrupt generation on detection of a rising edge.*/
-	HWREG(SOC_GPIO_3_REGS + GPIO_RISINGDETECT) |= BUTTON_GPIO3_21;
-}
-
-/* 
- * ===  FUNCTION  ======================================================================
- *         Name:  gpioIsrHandler
- *  Description:  
- * =====================================================================================
- */
-void gpioIsrHandler(void){
-
-    /* Clear the status of the interrupt flags */
-	HWREG(SOC_GPIO_3_REGS + GPIO_IRQSTATUS_1) = (1<<BUTTON_GPIO3_21);
-	flag_gpio = true;
-}
-
-/* 
- * ===  FUNCTION  ======================================================================
- *         Name:  ISR_Handler
- *  Description:  
- * =====================================================================================
- */
-void ISR_Handler(void){
-	/* Verify active IRQ number */
-	unsigned int irq_number = HWREG(SOC_AINTC_REGS + INTC_SIR_IRQ) & 0x7f;
-
-	if(irq_number == GRUPO_B){
-		gpioIsrHandler();
-	}
-	/* acknowledge IRQ */
-	HWREG(INTC_CONTROL) = 0x1;
 }
