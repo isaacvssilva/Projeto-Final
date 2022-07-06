@@ -85,7 +85,7 @@ void interruptSetup(){
  */
 void interruptButton(){
     /* Setting interrupt GPIO pin. */
-	HWREG(SOC_GPIO_3_REGS + GPIO_IRQSTATUS_1) |= BUTTON_GPIO3_21;
+	HWREG(SOC_GPIO_3_REGS + GPIO_IRQSTATUS_SET_1) |= BUTTON_GPIO3_21;
 
 	/* Enable interrupt generation on detection of a rising edge.*/
 	HWREG(SOC_GPIO_3_REGS + GPIO_RISINGDETECT) |= BUTTON_GPIO3_21;
