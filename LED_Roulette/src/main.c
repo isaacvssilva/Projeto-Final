@@ -27,21 +27,19 @@
 #define TIME		2000000
 
 //leds - expansor P9
-#define GPIO1_28	28
-#define GPIO1_16	16
-#define GPIO1_17	17
-
+#define GPIO1_28	1,28
+#define GPIO1_16	1,16
+#define GPIO1_17	1,17
+//leds - expansor P8
+#define GPIO1_13  	1,13
+#define GPIO1_12 	1,12
+#define GPIO1_15	1,15
+#define GPIO1_14	1,14
+#define GPIO1_29	1,29
+#define GPIO2_1		2,1
 //botoes - expansor P9
 #define BUTTON_GPIO3_21 21
 #define BUTTON_GPIO3_19 19
-
-//leds - expansor P8
-#define GPIO1_13 	13
-#define GPIO1_12 	12
-#define GPIO1_15	15
-#define GPIO1_14	14
-#define GPIO2_1		1
-#define GPIO1_29	29
 
 bool flag_gpio;
 
@@ -60,8 +58,18 @@ typedef enum _state{
 static void delay(int);
 void ledON(gpioMod  ,ucPinNumber );
 void ledOFF(gpioMod ,ucPinNumber );
-
-
+void sweep();
+void pulse();
+void move_led();
+unsigned int leds[18]={GPIO1_12,GPIO1_13,GPIO1_14,GPIO1_15,GPIO1_16,GPIO1_17,GPIO1_28,GPIO1_29,GPIO2_1};
+unsigned int button = 2;
+unsigned int difficulty = 0;
+unsigned int current_led = 0;
+unsigned int delay_time = 0;
+bool dir_flag = true; //true goes right, false goes left
+bool game_ended = false;
+bool is_win = false;
+bool is_finished_selecting = false;
 
 /*-----------------------FUNCOES PROVISORIAS--------------------------------------------*/
 
@@ -74,9 +82,14 @@ void ledOFF(gpioMod ,ucPinNumber );
 void interruptSetup(){
 	/* Interrupt mask */
 	HWREG(SOC_AINTC_REGS + INTC_MIR_CLEAR3) |= (1<<3);//(99 --> Bit 3 do 4º registrador (MIR CLEAR3))
-	
+	HWREG(SOC_AINTC_REGS + INTC_MIR_CLEAR3) |= (1<<2);
 }
 
+void gpioIsrHandler(void){
+    /* Clear the status of the interrupt flags */
+	HWREG(SOC_GPIO_3_REGS + GPIO_IRQSTATUS_1) = (1<<BUTTON_GPIO3_21);
+	flag_gpio = true;
+}
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  butConfig
@@ -89,19 +102,6 @@ void interruptButton(){
 
 	/* Enable interrupt generation on detection of a rising edge.*/
 	HWREG(SOC_GPIO_3_REGS + GPIO_RISINGDETECT) |= BUTTON_GPIO3_21;
-}
-
-/* 
- * ===  FUNCTION  ======================================================================
- *         Name:  gpioIsrHandler
- *  Description:  
- * =====================================================================================
- */
-void gpioIsrHandler(void){
-
-    /* Clear the status of the interrupt flags */
-	HWREG(SOC_GPIO_3_REGS + GPIO_IRQSTATUS_1) = (1<<BUTTON_GPIO3_21);
-	flag_gpio = true;
 }
 
 /* 
@@ -120,8 +120,29 @@ void ISR_Handler(void){
 	/* acknowledge IRQ */
 	HWREG(INTC_CONTROL) = 0x1;
 }
+void Leds_Init(){
+	//multiplexacao do modulo do pino referente aos leds como saida
+	for(unsigned int x=0; x<17; x=+2){
+		gpioPinMuxSetup(leds[x],leds[x+1], OUTPUT);
+	}
 
+	//setar direcao do pino
+	for(unsigned int x=0; x<17; x++){
+		gpioSetDirection(leds[x],leds[x+1], OUTPUT);
+		ledOFF(leds[x],leds[x+1]);
+	}
+}
+void Buttons_Init(){
+	//multiplexacao do modulo do pino referente aos botoes
+	gpioPinMuxSetup(GPIO3, BUTTON_GPIO3_21, INPUT);
+	gpioPinMuxSetup(GPIO3, BUTTON_GPIO3_19, INPUT);
 
+	//setar direcao botoes
+	gpioSetDirection(GPIO3, BUTTON_GPIO3_21, INPUT);
+	gpioSetDirection(GPIO3, BUTTON_GPIO3_19, INPUT);
+
+	uartPutString(UART0,"GPIO INPUT Initialized\n",22);
+}
 
 /* 
  * ===  FUNCTION  ======================================================================
@@ -132,86 +153,42 @@ void ISR_Handler(void){
 int main(void){
 	/* Hardware setup */
 	disableWdt();
-	
-	unsigned int count=0; 
-	ucPinNumber pin=22;
-	
 	/*-----------------------------------------------------------------------------
-	 *  initialize GPIO and UART modules
+	 *	initialize GPIO and UART modules
 	 *-----------------------------------------------------------------------------*/
-	gpioInitModule(GPIO1);
-	gpioInitModule(GPIO2);
-	gpioInitModule(GPIO3);
-
+	for(gpioMod x=GPIO1; x<=GPIO3; x++){
+		gpioInitModule(x);
+	}
    	uartInitModule(UART0, 115200, STOP1, PARITY_NONE, FLOW_OFF);
-
-	/*-----------------------------------------------------------------------------
-	 *  initialize pin of mudule
-	 *-----------------------------------------------------------------------------*/
-	for(count=pin; count<25; count++){
-		gpioPinMuxSetup(GPIO1, pin, OUTPUT);
-		delay(1000);
-	}
-
-	gpioPinMuxSetup(GPIO1, 12, INPUT);
-
-	//multiplexacao do modulo do pino referente aos leds como saida
-	gpioPinMuxSetup(GPIO1, GPIO1_28, OUTPUT);
-	gpioPinMuxSetup(GPIO1, GPIO1_16, OUTPUT);
-	gpioPinMuxSetup(GPIO1, GPIO1_17, OUTPUT);
-	gpioPinMuxSetup(GPIO1, GPIO1_12, OUTPUT);
-	gpioPinMuxSetup(GPIO1, GPIO1_13, OUTPUT);
-	gpioPinMuxSetup(GPIO1, GPIO1_15, OUTPUT);
-	gpioPinMuxSetup(GPIO1, GPIO1_14, OUTPUT);
-	gpioPinMuxSetup(GPIO2, GPIO2_1, OUTPUT);
-	gpioPinMuxSetup(GPIO1, GPIO1_29, OUTPUT);
-
-	//multiplexacao do modulo do pino referente aos botoes
-	gpioPinMuxSetup(GPIO3, BUTTON_GPIO3_21, INPUT);
-	gpioPinMuxSetup(GPIO3, BUTTON_GPIO3_19, INPUT);
-
-	/*-----------------------------------------------------------------------------
-	 *  set pin direction 
-	 *-----------------------------------------------------------------------------*/
-	for(count=pin; count<25; count++){
-		gpioSetDirection(GPIO1, pin, OUTPUT);
-		delay(1000);
-	}
-
-	gpioSetDirection(GPIO1, 12, INPUT);
-	//leds
-	gpioSetDirection(GPIO1, GPIO1_28, OUTPUT);
-	gpioSetDirection(GPIO1, GPIO1_16, OUTPUT);
-	gpioSetDirection(GPIO1, GPIO1_17, OUTPUT);
-	gpioSetDirection(GPIO1, GPIO1_12, OUTPUT);
-	gpioSetDirection(GPIO1, GPIO1_13, OUTPUT);
-	gpioSetDirection(GPIO1, GPIO1_15, OUTPUT);
-	gpioSetDirection(GPIO1, GPIO1_14, OUTPUT);
-	gpioSetDirection(GPIO2, GPIO2_1, OUTPUT);
-	gpioSetDirection(GPIO1, GPIO1_29, OUTPUT);
-	
-	//botoes
-	gpioSetDirection(GPIO3, BUTTON_GPIO3_21, INPUT);
-	gpioSetDirection(GPIO3, BUTTON_GPIO3_19, INPUT);
-
-    /*-----------------------------------------------------------------------------
-     *  set pin in LOW level
-     *-----------------------------------------------------------------------------*/
-    for(count=pin; count<25; count++){
-        ledOFF(GPIO1, count);
-		delay(1000);
-	}
-	
-	uartPutString(UART0,"GPIO INPUT Initialized\n",22);
+	Leds_Init();
+	Buttons_Init();
+	sweep();
+	pulse();
+	//nivel de dificuldade
+	difficulty = 0;
+  	ledON(leds[(difficulty*2)],leds[(difficulty*2)+1]);
+	delay(1000);
 
 	while(true){
-		if(HWREG(SOC_GPIO_3_REGS + GPIO_DATAIN) & (1<<BUTTON_GPIO3_19)){
-			ledON(GPIO1, pin);
-			ledON(GPIO2,GPIO2_1);
-		}else{
-			ledOFF(GPIO1, pin);
-			ledOFF(GPIO2, GPIO2_1);
+        if(game_ended==false){
+		move_led();
+		delay(delay_time);
 		}
+		else if(game_ended){
+		uartPutString(UART0,"Game over\n",10);
+		if(is_win){
+		uartPutString(UART0,"you win\n",8);
+			for(int i=0; i<5;i++){
+				pulse();
+				delay(100);
+			}
+		}
+   		sweep();
+		game_ended = false;
+		is_win = false;
+        delay(2000);
+		}
+
 	}
 
 	return(0);
@@ -236,6 +213,49 @@ void ledON(gpioMod mod, ucPinNumber pin){
 void ledOFF(gpioMod mod,  ucPinNumber pin ){
 	gpioSetPinValue(mod, pin, LOW);
 }/* -----  end of function ledOFF  ----- */
+
+void sweep(){
+	for(unsigned int i=0; i<17;i++){
+		ledON(leds[i],leds[i+1]);
+		delay(50);
+		ledOFF(leds[i],leds[i+1]);
+	}
+	
+	for(unsigned int i=16; i>=0;i-=2){
+		ledON(leds[i],leds[i+1]);
+		delay(50);
+		ledOFF(leds[i],leds[i+1]);
+	}
+}
+
+void pulse(){
+	for(unsigned int i=0; i<17;i++){
+		ledON(leds[i],leds[i+1]);
+	}
+	delay(100);
+	for(unsigned int i=0; i<17;i++){
+		ledOFF(leds[i],leds[i+1]);
+	}
+}
+
+void move_led(){
+  	ledOFF(leds[(current_led*2)],leds[(current_led*2)]+1);
+	if(current_led == 8){
+		dir_flag = false;
+		current_led -= 1;
+	}
+	else if(current_led == 0){
+		dir_flag = true;
+		current_led += 1;
+	}
+	else if(dir_flag){
+		current_led += 1;
+	}
+	else if(!dir_flag){
+		current_led -= 1;
+	}
+	ledON(leds[(current_led*2)],leds[(current_led*2)]+1);
+}
 
 /*FUNCTION*-------------------------------------------------------
 *

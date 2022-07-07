@@ -341,4 +341,3 @@ unsigned int gpioGetPinValue(gpioMod mod, ucPinNumber pin){
     	return(-1);  // isnt a valid mod/pin combination or doesnt exist
    	}
 }/* -----  end of function gpiogetPinValue  ----- */
-
