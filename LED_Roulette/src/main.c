@@ -121,6 +121,7 @@ int main(void){
 	Buttons_Init();
 	sweep();
 	pulse();
+	
 	//nivel de dificuldade
 	difficulty = 0;
   	ledON(leds[(difficulty*2)],leds[(difficulty*2)+1]);
@@ -128,13 +129,13 @@ int main(void){
 
 	while(true){
         if(game_ended==false){
-		move_led();
-		delay(delay_time);
-		}
-		else if(game_ended){
-		uartPutString(UART0,"Game over\n",10);
+			move_led();
+			delay(delay_time);
+
+		}else if(game_ended){
+			uartPutString(UART0,"Game over\n",10);
 		if(is_win){
-		uartPutString(UART0,"you win\n",8);
+			uartPutString(UART0,"you win\n",8);
 			for(int i=0; i<5;i++){
 				pulse();
 				delay(100);

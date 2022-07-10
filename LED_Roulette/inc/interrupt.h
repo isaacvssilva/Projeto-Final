@@ -3,7 +3,7 @@
 /*
  * =====================================================================================
  *
- *       Filename:  main.c
+ *       Filename:  interrupt.h
  *
  *    Description:  
  *
@@ -166,8 +166,6 @@ typedef enum _ARMCortex_A8Interrupts{
 #define INTC_SYSCONFIG							0x48200010
 #define INTC_SYSSTATUS							0x48200014
 #define INTC_THRESHOLD							0x48200068
-//#include "bbb_regs.h"
-
 
 /*-----------------------------------------------------------------------------
  *  Function prototype
