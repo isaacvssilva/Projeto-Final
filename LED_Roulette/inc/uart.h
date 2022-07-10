@@ -25,6 +25,8 @@
 #include "pad.h"
 #include "control_module.h"
 #include "clock_module.h"
+#include "interrupt.h"
+#include "timer.h"
 
 #define UARTx_OP_R_RHR 			0x0
 #define UARTx_OP_R_IER			0x4
@@ -301,6 +303,7 @@ int uartPutString(UART_t uart, char *str, unsigned int length);
  * @return                 The lenght read
  **/
 int uartGetString(UART_t uart, char *buf, unsigned int length);
+void uartClearBuffer(UART_t );
 
 static const unsigned int UART_ARRAY_BASE[] = {SOC_UART_0_REGS, SOC_UART_1_REGS, SOC_UART_2_REGS, SOC_UART_3_REGS, SOC_UART_4_REGS, SOC_UART_5_REGS};
 

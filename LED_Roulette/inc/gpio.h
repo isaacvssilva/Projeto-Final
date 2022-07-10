@@ -25,6 +25,8 @@
 #include "soc_AM335x.h"
 #include "hw_types.h"
 #include "uart.h"
+#include "interrupt.h"
+#include "timer.h"
 
 
 #define GPIO_REVISION           0x000
@@ -67,19 +69,29 @@ typedef unsigned char ucPinNumber;
 typedef enum _pinLevel{
 	LOW,
 	HIGH
-}pinLevel;/* ----------  end of enum pinLevel  ---------- */
+}pinLevel;				/* ----------  end of enum pinLevel  ---------- */
 
 typedef enum _gpioMod{
 	GPIO0,
 	GPIO1,
 	GPIO2,
 	GPIO3
-}gpioMod;/* ----------  end of enum gpioMod  ---------- */
+}gpioMod;				/* ----------  end of enum gpioMod  ---------- */
 
 typedef enum _pinDirection{
 	OUTPUT,
 	INPUT
-}pinDirection;/* ----------  end of enum pinDirection  ---------- */
+}pinDirection;				/* ----------  end of enum pinDirection  ---------- */
+
+typedef enum _gpioIntGroup{
+	GRUPO_A,
+	GRUPO_B
+}gpioIntGroup;				/* ----------  end of enum gpioIntGroup  ---------- */
+
+typedef enum _edgeType{
+	RISING=1,
+	FALLING=0
+}edgeType;				/* ----------  end of enum gpioIntGroup  ---------- */
 
 /*-----------------------------------------------------------------------------
  *  Function prototype
@@ -87,9 +99,12 @@ typedef enum _pinDirection{
 void gpioInitModule(gpioMod );
 void gpioPinMuxSetup(gpioMod ,ucPinNumber, pinDirection );
 void gpioSetDirection(gpioMod ,ucPinNumber ,pinDirection );	
-int  gpioGetDirection(ucPinNumber ,ucPinNumber );
+int gpioGetDirection(gpioMod , ucPinNumber );
 void gpioSetPinValue(gpioMod ,ucPinNumber ,pinLevel );
 unsigned int gpioGetPinValue(gpioMod ,ucPinNumber );
-void disableWdt(void);
+// New fuctions
+void gpioSetPinIterrupt(gpioMod , ucPinNumber , gpioIntGroup );
+void gpioClearStatusIRQ(gpioMod , ucPinNumber , gpioIntGroup );
+void gpioSetEdge(gpioMod , ucPinNumber , edgeType );
 	
 #endif /*GPIO_H_ */

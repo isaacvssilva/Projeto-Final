@@ -61,21 +61,6 @@ static const CONTROL_MODULE GPIO_CTRL_MODULE_ARRAY[32][4] = {
 
 /* 
  * ===  FUNCTION  ======================================================================
- *         Name:  disableWdt
- *  Description:  
- * =====================================================================================
- */
-
-void disableWdt(void){
-	HWREG(SOC_WDT_1_REGS + CKM_PER_I2C1_CLKCTRL) = 0xAAAA;
-	while((HWREG(SOC_WDT_1_REGS + CKM_PER_MCASP0_CLKCTRL) & (1<<4)));
-
-	HWREG(SOC_WDT_1_REGS + CKM_PER_I2C1_CLKCTRL) = 0x5555;
-	while((HWREG(SOC_WDT_1_REGS + CKM_PER_MCASP0_CLKCTRL) & (1<<4)));
-}
-
-/* 
- * ===  FUNCTION  ======================================================================
  *         Name:  gpioCheckValidPortPin
  *  Description:  
  * =====================================================================================
@@ -84,12 +69,12 @@ static bool gpioCheckValidPortPin(gpioMod mod, ucPinNumber pin){
    if((mod < GPIO0) || (mod > GPIO3)){
       // TODO: raise error (mod is either too big or negative: /mod)
       return(false);
-   	}
-	if((pin < 0) || (pin > 31)){
+   }
+   if((pin < 0) || (pin > 31)){
       // TODO: raise error (pin is either too big or negative: /pin)
       return(false);
-   	}
-   	return(true);
+   }
+   return(true);
 }/* -----  end of function gpioCheckValidPortPin  ----- */
 
 /* 
@@ -100,8 +85,8 @@ static bool gpioCheckValidPortPin(gpioMod mod, ucPinNumber pin){
  */
 static bool gpioCheckValidDirection(pinDirection dir){
 	if((dir!=INPUT) && (dir!=OUTPUT)){
-		// TODO: raise error (direction not valid: /dir)
-		return(false);
+      		// TODO: raise error (direction not valid: /dir)
+      		return(false);
    	}
    	return(true);
 }/* -----  end of function gpioCheckValidDirection  ----- */
@@ -114,25 +99,25 @@ static bool gpioCheckValidDirection(pinDirection dir){
  */
 void gpioInitModule(gpioMod mod){
 	if(gpioCheckValidPortPin(mod, 0)){  // pin 0 always exist
-		unsigned int setting = (1<<18) | (0x2<<0);   //enable functional clock & enable module, TRM 8.1.12.1.29
-		switch(mod){
-			case GPIO0:
-				return;        // GPIO0 doesnt have a clock module register, TRM 8.1.12.1
-				break;
-			case GPIO1:
-					ckmSetCLKModuleRegister(CKM_PER_GPIO1_CLKCTRL, setting);
-					while((ckmGetCLKModuleRegister(CKM_PER_GPIO1_CLKCTRL) & (0x3<<16)) != 0)
-				break;
-			case GPIO2:
-					ckmSetCLKModuleRegister(CKM_PER_GPIO2_CLKCTRL, setting);
-					while((ckmGetCLKModuleRegister(CKM_PER_GPIO2_CLKCTRL) & (0x3<<16)) != 0) 
-				break;
-			case GPIO3:	
-				break;
-			default:
-			// TODO: raise error (not possible, checked mod before: /mod)
-			break;
-		}
+    		unsigned int setting = (1<<18) | (0x2<<0);   //enable functional clock & enable module, TRM 8.1.12.1.29
+      		switch(mod){
+        		case GPIO0:
+           			return;        // GPIO0 doesnt have a clock module register, TRM 8.1.12.1
+            		break;
+         		case GPIO1:
+            			ckmSetCLKModuleRegister(CKM_PER_GPIO1_CLKCTRL, setting);
+            			while((ckmGetCLKModuleRegister(CKM_PER_GPIO1_CLKCTRL) & (0x3<<16)) != 0)
+            		break;
+         		case GPIO2:
+            			ckmSetCLKModuleRegister(CKM_PER_GPIO2_CLKCTRL, setting);
+            			while((ckmGetCLKModuleRegister(CKM_PER_GPIO2_CLKCTRL) & (0x3<<16)) != 0) 
+            		break;
+         		case GPIO3:
+            		break;
+         		default:
+            			// TODO: raise error (not possible, checked mod before: /mod)
+            		break;
+      		}
 	}
 }
 
@@ -145,18 +130,18 @@ void gpioInitModule(gpioMod mod){
 void gpioPinMuxSetup(gpioMod mod, ucPinNumber pin, pinDirection dir){
 	if(gpioCheckValidPortPin(mod, pin)){
 					
-		CONTROL_MODULE module = GPIO_CTRL_MODULE_ARRAY[pin][mod];  // get conf <module> <pin> for mod/pin combination
-		padSetMode(module, MODE_7);  //set mode to GPIO, Datasheet 4.3.2
+					CONTROL_MODULE module = GPIO_CTRL_MODULE_ARRAY[pin][mod];  // get conf <module> <pin> for mod/pin combination
+					padSetMode(module, MODE_7);  //set mode to GPIO, Datasheet 4.3.2
 					
-		if(dir == INPUT){
-			unsigned int temp = cmGetCtrlModule(module);
-
-			temp |= CONTROL_CONF_GPMC_SLEWCTRL | 	/* Slew rate slow */
-			CONTROL_CONF_GPMC_RXACTIVE |			/* Receiver enabled */
-			(CONTROL_CONF_GPMC_PUDEN & (~CONTROL_CONF_GPMC_PUDEN)) | /* PU_PD enabled */
-			(CONTROL_CONF_GPMC_PUTYPESEL & (~CONTROL_CONF_GPMC_PUTYPESEL));
-			cmSetCtrlModule(module, temp);
-		}
+					if(dir == INPUT){
+									unsigned int temp = cmGetCtrlModule(module);
+      								temp |= CONTROL_CONF_GPMC_SLEWCTRL | 	/* Slew rate slow */
+									CONTROL_CONF_GPMC_RXACTIVE |	/* Receiver enabled */
+									(CONTROL_CONF_GPMC_PUDEN & (~CONTROL_CONF_GPMC_PUDEN)) | /* PU_PD enabled */
+									(CONTROL_CONF_GPMC_PUTYPESEL & (~CONTROL_CONF_GPMC_PUTYPESEL));
+									cmSetCtrlModule(module, temp);
+									
+					}
 	}
 }
 
@@ -169,36 +154,36 @@ void gpioPinMuxSetup(gpioMod mod, ucPinNumber pin, pinDirection dir){
 void gpioSetDirection(gpioMod mod, ucPinNumber pin, pinDirection dir){
 	unsigned int addr_temp, val_temp;
 
-	if(gpioCheckValidPortPin(mod,pin)){
-		if(gpioCheckValidDirection(dir)){	
-			switch (mod) {
-				case GPIO0:
-				break;
-				case GPIO1:	
-					// GPIOx base + output enable offset, TRM 2.1 & 25.4.1.16
-					addr_temp = SOC_GPIO_1_REGS + GPIO_OE;     
-					// not overwriting previous mod setting
-					val_temp =  HWREG(addr_temp);
-				break;
-				case GPIO2:
-					// GPIOx base + output enable offset, TRM 2.1 & 25.4.1.16
-					addr_temp = SOC_GPIO_2_REGS + GPIO_OE;     
-					// not overwriting previous mod setting
-					val_temp =  HWREG(addr_temp);		
-				break;
-				case GPIO3:
-				break;
-				default:	
-				break;
-			}/* -----  end switch  ----- */
-		
-			val_temp &= ~(1<<pin);
-			val_temp |= (dir<<pin);
-		
-			// writing new mod setting
-			HWREG(addr_temp) = val_temp;
-		}
-	}
+		if(gpioCheckValidPortPin(mod,pin)){
+    		if(gpioCheckValidDirection(dir)){	
+					switch (mod) {
+						case GPIO0:
+						break;
+						case GPIO1:	
+							// GPIOx base + output enable offset, TRM 2.1 & 25.4.1.16
+        					addr_temp = SOC_GPIO_1_REGS + GPIO_OE;     
+							// not overwriting previous mod setting
+							val_temp =  HWREG(addr_temp);
+						break;
+						case GPIO2:
+							// GPIOx base + output enable offset, TRM 2.1 & 25.4.1.16
+        					addr_temp = SOC_GPIO_2_REGS + GPIO_OE;     
+							// not overwriting previous mod setting
+							val_temp =  HWREG(addr_temp);		
+						break;
+						case GPIO3:
+						break;
+						default:	
+						break;
+					}/* -----  end switch  ----- */
+        	
+					val_temp &= ~(1<<pin);
+      				val_temp |= (dir<<pin);
+        		
+					// writing new mod setting
+					HWREG(addr_temp) = val_temp;
+     	}
+   	}
 }/* -----  end of function gpioSetDirection  ----- */
 
 /* 
@@ -223,11 +208,10 @@ int gpioGetDirection(gpioMod mod, ucPinNumber pin){
     			val_temp = HWREG(addr_temp);
 			break;
 			case GPIO2:	
-				// GPIOx base + output enable offset, TRM 2.1 & 25.4.1.16
-    			addr_temp = SOC_GPIO_2_REGS + GPIO_OE;      
-    			val_temp = HWREG(addr_temp);
+			
 			break;
-			case GPIO3:
+			case GPIO3:	
+			
 			break;
 			default:	
 			
@@ -269,7 +253,7 @@ void gpioSetPinValue(gpioMod mod, ucPinNumber pin, pinLevel value){
       				addr_temp = SOC_GPIO_2_REGS + GPIO_SETDATAOUT;
 					val_temp = 1<<pin;	
 				break;
-				case GPIO3:
+				case GPIO3:	
 				break;
 				default:	
 				break;
@@ -296,7 +280,7 @@ void gpioSetPinValue(gpioMod mod, ucPinNumber pin, pinLevel value){
 				default:	
 				break;
 			}/* -----  end switch  ----- */
-			HWREG(addr_temp) &= val_temp;
+      			HWREG(addr_temp) &= val_temp;
    		}
 	}
 }/* -----  end of function gpioGetPinValue  ----- */
@@ -316,14 +300,12 @@ unsigned int gpioGetPinValue(gpioMod mod, ucPinNumber pin){
 			case GPIO0:
 			break;
 			case GPIO1:
-				addr_temp = SOC_GPIO_1_REGS + GPIO_DATAIN; // GPIOx base + data in offset, TRM 2.1 & 25.4.1.17
-				val_temp = HWREG(addr_temp);
+					addr_temp = SOC_GPIO_1_REGS + GPIO_DATAIN; // GPIOx base + data in offset, TRM 2.1 & 25.4.1.17
+      				val_temp = HWREG(addr_temp);
 			break;
 			case GPIO2:	
-				addr_temp = SOC_GPIO_2_REGS + GPIO_DATAIN; // GPIOx base + data in offset, TRM 2.1 & 25.4.1.17
-      			val_temp = HWREG(addr_temp);
 			break;
-			case GPIO3:
+			case GPIO3:	
 			break;
 			default:	
 			break;
@@ -337,7 +319,118 @@ unsigned int gpioGetPinValue(gpioMod mod, ucPinNumber pin){
     }else{
     	return(LOW);
     }
+
    	}else{
-    	return(-1);  // isnt a valid mod/pin combination or doesnt exist
+    		return(-1);  // isnt a valid mod/pin combination or doesnt exist
    	}
 }/* -----  end of function gpiogetPinValue  ----- */
+
+
+
+void gpioSetPinIterrupt(gpioMod mod, ucPinNumber pin, gpioIntGroup group){
+	unsigned int addr_temp;
+
+	switch (mod){
+	case GPIO0:
+		if(!group)
+			addr_temp = SOC_GPIO_0_REGS+GPIO_IRQSTATUS_SET_0;
+		else
+			addr_temp = SOC_GPIO_0_REGS+GPIO_IRQSTATUS_SET_1;
+		break;
+	case GPIO1:
+		if(!group)
+			addr_temp = SOC_GPIO_1_REGS+GPIO_IRQSTATUS_SET_0;
+		else
+			addr_temp = SOC_GPIO_1_REGS+GPIO_IRQSTATUS_SET_1;		
+		break;
+	case GPIO2:
+		if(!group)
+			addr_temp = SOC_GPIO_2_REGS+GPIO_IRQSTATUS_SET_0;
+		else
+			addr_temp = SOC_GPIO_2_REGS+GPIO_IRQSTATUS_SET_1;
+		break;
+	case GPIO3:
+		if(!group)
+			addr_temp = SOC_GPIO_3_REGS+GPIO_IRQSTATUS_SET_0;
+		else
+			addr_temp = SOC_GPIO_3_REGS+GPIO_IRQSTATUS_SET_1;
+		break;
+	default:
+		break;
+	}
+	HWREG(addr_temp) |= (1<<pin);
+}
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  gpioClearStatusIRQ
+ *  Description:  
+ * =====================================================================================
+ */
+void gpioClearStatusIRQ(gpioMod mod,  ucPinNumber pin, gpioIntGroup group){
+	unsigned int addr_temp;
+
+	switch (mod){
+	case GPIO0:
+		if(!group)
+			addr_temp = SOC_GPIO_0_REGS+GPIO_IRQSTATUS_0;
+		else
+			addr_temp = SOC_GPIO_0_REGS+GPIO_IRQSTATUS_1;
+		break;
+	case GPIO1:
+		if(!group)
+			addr_temp = SOC_GPIO_1_REGS+GPIO_IRQSTATUS_0;
+		else
+			addr_temp = SOC_GPIO_1_REGS+GPIO_IRQSTATUS_1;		
+		break;
+	case GPIO2:
+		if(!group)
+			addr_temp = SOC_GPIO_2_REGS+GPIO_IRQSTATUS_0;
+		else
+			addr_temp = SOC_GPIO_2_REGS+GPIO_IRQSTATUS_1;
+		break;
+	case GPIO3:
+		if(!group)
+			addr_temp = SOC_GPIO_3_REGS+GPIO_IRQSTATUS_0;
+		else
+			addr_temp = SOC_GPIO_3_REGS+GPIO_IRQSTATUS_1;
+		break;
+	default:
+		break;
+	}
+	HWREG(addr_temp) |= (1<<pin);
+}
+
+void gpioSetEdge(gpioMod mod, ucPinNumber pin, edgeType edge){
+	unsigned int addr_temp;
+
+	switch (mod){
+	case GPIO0:
+		if(edge)
+			addr_temp = SOC_GPIO_0_REGS+GPIO_RISINGDETECT;
+		else 
+			addr_temp = SOC_GPIO_0_REGS+GPIO_FALLINGDETECT;
+		break;
+	case GPIO1:
+		if(edge)
+			addr_temp = SOC_GPIO_1_REGS+GPIO_RISINGDETECT;
+		else 
+			addr_temp = SOC_GPIO_1_REGS+GPIO_FALLINGDETECT;
+		break;
+	case GPIO2:
+		if(edge)
+			addr_temp = SOC_GPIO_2_REGS+GPIO_RISINGDETECT;
+		else 
+			addr_temp = SOC_GPIO_2_REGS+GPIO_FALLINGDETECT;
+		break;
+	case GPIO3:
+		if(edge)
+			addr_temp = SOC_GPIO_3_REGS+GPIO_RISINGDETECT;
+		else 
+			addr_temp = SOC_GPIO_3_REGS+GPIO_FALLINGDETECT;
+		break;
+	default:
+		break;
+	}
+	HWREG(addr_temp) |= (1<<pin);
+}

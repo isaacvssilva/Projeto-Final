@@ -8,8 +8,8 @@ BIN=bin/
 
 all: app
 
-app: start.o main.o gpio.o uart.o pad.o control_module.o clock_module.o
-	$(CHAIN)-ld $(OBJ)start.o $(OBJ)main.o $(OBJ)gpio.o $(OBJ)uart.o $(OBJ)pad.o $(OBJ)control_module.o $(OBJ)clock_module.o -T $(SRC)memmap.ld -o $(OBJ)main.elf
+app: start.o main.o gpio.o uart.o interrupt.o timer.o pad.o control_module.o clock_module.o 
+	$(CHAIN)-ld $(OBJ)start.o $(OBJ)main.o $(OBJ)gpio.o $(OBJ)uart.o $(OBJ)interrupt.o $(OBJ)timer.o $(OBJ)pad.o $(OBJ)control_module.o $(OBJ)clock_module.o -T $(SRC)memmap.ld -o $(OBJ)main.elf
 	$(CHAIN)-objcopy $(OBJ)main.elf $(BIN)spl.boot -O binary
 	cp $(BIN)spl.boot /tftpboot/appGpio.bin
 
@@ -24,7 +24,13 @@ gpio.o: $(SRC)gpio.c
  
 uart.o: $(SRC)uart.c                          
 	$(CHAIN)-gcc $(CFLAGS) $(IPATH) -c $(SRC)uart.c -o $(OBJ)uart.o
-                                        
+
+interrupt.o: $(SRC)interrupt.c                          
+	$(CHAIN)-gcc $(CFLAGS) $(IPATH) -c $(SRC)interrupt.c -o $(OBJ)interrupt.o
+
+timer.o: $(SRC)timer.c                          
+	$(CHAIN)-gcc $(CFLAGS) $(IPATH) -c $(SRC)timer.c -o $(OBJ)timer.o	
+
 pad.o: $(SRC)pad.c                            
 	$(CHAIN)-gcc $(CFLAGS) $(IPATH) -c $(SRC)pad.c -o $(OBJ)pad.o
 

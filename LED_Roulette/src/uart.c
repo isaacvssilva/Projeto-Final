@@ -122,3 +122,8 @@ int uartgetString(UART_t uart, char *buf, unsigned int length){
    return(length);
 }
 
+void uartClearBuffer(UART_t uart){
+   unsigned int uart_base = UART_ARRAY_BASE[uart];
+   while((HWREG(uart_base+0x14)&0x1)==1)
+      uartGetC(uart);
+}

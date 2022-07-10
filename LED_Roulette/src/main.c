@@ -18,8 +18,8 @@
 
 #include	"gpio.h"
 #include	"uart.h"
-#include	"interrupts.h"
-
+#include	"interrupt.h"
+#include	"timer.h"
 
 /*****************************************************************************
 **                INTERNAL MACRO DEFINITIONS
@@ -55,7 +55,7 @@ typedef enum _state{
 /*****************************************************************************
 **                INTERNAL FUNCTION PROTOTYPES
 *****************************************************************************/
-static void delay(int);
+void gpioSetup(void);
 void ledON(gpioMod  ,ucPinNumber );
 void ledOFF(gpioMod ,ucPinNumber );
 void sweep();
@@ -73,75 +73,37 @@ bool is_finished_selecting = false;
 
 /*-----------------------FUNCOES PROVISORIAS--------------------------------------------*/
 
-/* 
- * ===  FUNCTION  ======================================================================
- *         Name:  interruptSetup
- *  Description:  
- * =====================================================================================
- */
-void interruptSetup(){
-	/* Interrupt mask */
-	HWREG(SOC_AINTC_REGS + INTC_MIR_CLEAR3) |= (1<<3);//(99 --> Bit 3 do 4º registrador (MIR CLEAR3))
-	HWREG(SOC_AINTC_REGS + INTC_MIR_CLEAR3) |= (1<<2);
+
+void gpio3A_IsrHandler(void){
+
+	gpioClearStatusIRQ(GPIO3, 12, GRUPO_A);
 }
 
-void gpioIsrHandler(void){
-    /* Clear the status of the interrupt flags */
-	HWREG(SOC_GPIO_3_REGS + GPIO_IRQSTATUS_1) = (1<<BUTTON_GPIO3_21);
-	flag_gpio = true;
-}
-/* 
- * ===  FUNCTION  ======================================================================
- *         Name:  butConfig
- *  Description:  
- * =====================================================================================
- */
-void interruptButton(){
-    /* Setting interrupt GPIO pin. */
-	HWREG(SOC_GPIO_3_REGS + GPIO_IRQSTATUS_SET_1) |= BUTTON_GPIO3_21;
+void gpio3B_IsrHandler(void){
 
-	/* Enable interrupt generation on detection of a rising edge.*/
-	HWREG(SOC_GPIO_3_REGS + GPIO_RISINGDETECT) |= BUTTON_GPIO3_21;
+	gpioClearStatusIRQ(GPIO3, 12, GRUPO_B);
 }
 
-/* 
- * ===  FUNCTION  ======================================================================
- *         Name:  ISR_Handler
- *  Description:  
- * =====================================================================================
- */
-void ISR_Handler(void){
-	/* Verify active IRQ number */
-	unsigned int irq_number = HWREG(SOC_AINTC_REGS + INTC_SIR_IRQ) & 0x7f;
-
-	if(irq_number == GRUPO_B){
-		gpioIsrHandler();
-	}
-	/* acknowledge IRQ */
-	HWREG(INTC_CONTROL) = 0x1;
-}
 void Leds_Init(){
 	//multiplexacao do modulo do pino referente aos leds como saida
-	for(unsigned int x=0; x<17; x=+2){
+	for(unsigned int x=0; x<=17; x+=2){
 		gpioPinMuxSetup(leds[x],leds[x+1], OUTPUT);
 	}
 
 	//setar direcao do pino
-	for(unsigned int x=0; x<17; x++){
+	for(unsigned int x=0; x<=17; x+=2){
 		gpioSetDirection(leds[x],leds[x+1], OUTPUT);
 		ledOFF(leds[x],leds[x+1]);
 	}
 }
 void Buttons_Init(){
-	//multiplexacao do modulo do pino referente aos botoes
-	gpioPinMuxSetup(GPIO3, BUTTON_GPIO3_21, INPUT);
-	gpioPinMuxSetup(GPIO3, BUTTON_GPIO3_19, INPUT);
-
-	//setar direcao botoes
-	gpioSetDirection(GPIO3, BUTTON_GPIO3_21, INPUT);
-	gpioSetDirection(GPIO3, BUTTON_GPIO3_19, INPUT);
-
-	uartPutString(UART0,"GPIO INPUT Initialized\n",22);
+	for(int i = BUTTON_GPIO3_19; i <= BUTTON_GPIO3_21; i+=2){
+		gpioPinMuxSetup(GPIO3, i, INPUT);
+		gpioSetDirection(GPIO3, i, INPUT);
+		gpioSetEdge(GPIO3, i, RISING);
+	}
+	gpioSetPinIterrupt(GPIO3, BUTTON_GPIO3_19, GRUPO_A);
+	gpioSetPinIterrupt(GPIO3, BUTTON_GPIO3_21, GRUPO_B);
 }
 
 /* 
@@ -153,13 +115,8 @@ void Buttons_Init(){
 int main(void){
 	/* Hardware setup */
 	disableWdt();
-	/*-----------------------------------------------------------------------------
-	 *	initialize GPIO and UART modules
-	 *-----------------------------------------------------------------------------*/
-	for(gpioMod x=GPIO1; x<=GPIO3; x++){
-		gpioInitModule(x);
-	}
-   	uartInitModule(UART0, 115200, STOP1, PARITY_NONE, FLOW_OFF);
+	gpioSetup();	
+	timerSetup(TRUE);
 	Leds_Init();
 	Buttons_Init();
 	sweep();
@@ -194,34 +151,30 @@ int main(void){
 	return(0);
 } /* ----------  end of function main  ---------- */
 
-/* 
- * ===  FUNCTION  ======================================================================
- *         Name:  ledON
- *  Description:  
- * =====================================================================================
- */
+void gpioSetup(void){
+	for(gpioMod x=GPIO1; x<=GPIO3; x++){
+		gpioInitModule(x);
+	}
+	intcSetInterrupt(GPIOINT3A);
+	intcSetInterrupt(GPIOINT3B);
+}
+
 void ledON(gpioMod mod, ucPinNumber pin){
 	gpioSetPinValue(mod, pin, HIGH);	
 }/* -----  end of function ledON  ----- */
 
-/* 
- * ===  FUNCTION  ======================================================================
- *         Name:  ledOFF
- *  Description:  
- * =====================================================================================
- */
 void ledOFF(gpioMod mod,  ucPinNumber pin ){
 	gpioSetPinValue(mod, pin, LOW);
 }/* -----  end of function ledOFF  ----- */
 
 void sweep(){
-	for(unsigned int i=0; i<17;i++){
+	for(unsigned int i=0; i<=17;i+=2){
 		ledON(leds[i],leds[i+1]);
 		delay(50);
 		ledOFF(leds[i],leds[i+1]);
 	}
 	
-	for(unsigned int i=16; i>=0;i-=2){
+	for(unsigned int i=17;i>=0;i-=2){
 		ledON(leds[i],leds[i+1]);
 		delay(50);
 		ledOFF(leds[i],leds[i+1]);
@@ -229,7 +182,7 @@ void sweep(){
 }
 
 void pulse(){
-	for(unsigned int i=0; i<17;i++){
+	for(unsigned int i=0; i<=17;i++){
 		ledON(leds[i],leds[i+1]);
 	}
 	delay(100);
@@ -255,14 +208,4 @@ void move_led(){
 		current_led -= 1;
 	}
 	ledON(leds[(current_led*2)],leds[(current_led*2)]+1);
-}
-
-/*FUNCTION*-------------------------------------------------------
-*
-* Function Name : Delay
-* Comments      :
-*END*-----------------------------------------------------------*/
-static void delay(int iTime){
-	volatile unsigned int ra;
-	for(ra = 0; ra < iTime; ra ++);
 }
