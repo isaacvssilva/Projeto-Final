@@ -140,7 +140,7 @@ int main(void){
 	pulse();
 	while(true){
 		//nivel de dificuldade
-		if(is_selecting){
+		while(is_selecting){
 			ledON(leds[(difficulty*2)],leds[(difficulty*2)+1]);
 			delay(500);	
 		}
