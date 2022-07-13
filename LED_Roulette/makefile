@@ -1,3 +1,4 @@
+CHAINPATH=
 CHAIN=$(CHAINPATH)arm-none-eabi
 CFLAGS=-std=c99 -Wall -mfpu=neon -mhard-float -mcpu=cortex-a8
 AFLAGS=-mfpu=neon
@@ -9,7 +10,7 @@ BIN=bin/
 all: app
 
 app: start.o main.o gpio.o uart.o interrupt.o timer.o system_services.o pad.o control_module.o clock_module.o 
-	$(CHAIN)-ld $(OBJ)start.o $(OBJ)main.o $(OBJ)gpio.o $(OBJ)uart.o $(OBJ)interrupt.o $(OBJ)timer.o $(OBJ)system_services.o $(OBJ)pad.o $(OBJ)control_module.o $(OBJ)clock_module.o -T $(SRC)memmap.ld -o $(OBJ)main.elf
+	$(CHAIN)-ld $(OBJ)start.o $(OBJ)main.o $(OBJ)gpio.o $(OBJ)uart.o $(OBJ)interrupt.o $(OBJ)timer.o  $(OBJ)system_services.o $(OBJ)pad.o $(OBJ)control_module.o $(OBJ)clock_module.o -T $(SRC)memmap.ld -o $(OBJ)main.elf
 	$(CHAIN)-objcopy $(OBJ)main.elf $(BIN)spl.boot -O binary
 	cp $(BIN)spl.boot /tftpboot/appGpio.bin
 
@@ -31,11 +32,11 @@ interrupt.o: $(SRC)interrupt.c
 timer.o: $(SRC)timer.c                          
 	$(CHAIN)-gcc $(CFLAGS) $(IPATH) -c $(SRC)timer.c -o $(OBJ)timer.o
 
-system_services.o: $(SRC)system_services.c                          
-	$(CHAIN)-gcc $(CFLAGS) $(IPATH) -c $(SRC)system_services.c -o $(OBJ)system_services.o			
-
 pad.o: $(SRC)pad.c                            
 	$(CHAIN)-gcc $(CFLAGS) $(IPATH) -c $(SRC)pad.c -o $(OBJ)pad.o
+
+system_services.o: $(SRC)system_services.c                          
+	$(CHAIN)-gcc $(CFLAGS) $(IPATH) -c $(SRC)system_services.c -o $(OBJ)system_services.o
 
 control_module.o: $(SRC)control_module.c
 	$(CHAIN)-gcc $(CFLAGS) $(IPATH) -c $(SRC)control_module.c -o $(OBJ)control_module.o

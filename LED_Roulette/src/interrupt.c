@@ -17,6 +17,7 @@
  */
 #include "interrupt.h"
 
+
 void intcSetInterrupt(ARMCortex_A8Interrupts typeInterrupt){
     unsigned addr_temp;
     unsigned int INTCReg = typeInterrupt >> 5;
