@@ -135,7 +135,7 @@ int main(void){
 	difficulty = 0;
   	ledON(leds[(difficulty*2)],leds[(difficulty*2)+1]);
 	delay(1000);
-
+	gpio3A_IsrHandler();
 	while(true){
         if(game_ended==false){
 			move_led();
