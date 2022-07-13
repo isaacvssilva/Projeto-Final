@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "services_system.C": "cpp",
+        "syscall.h": "c"
+    }
+}

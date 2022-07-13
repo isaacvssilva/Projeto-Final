@@ -20,6 +20,7 @@
 #include	"uart.h"
 #include	"interrupt.h"
 #include	"timer.h"
+#include 	"system_services.h"
 
 /*****************************************************************************
 **                INTERNAL MACRO DEFINITIONS
@@ -61,6 +62,8 @@ void ledOFF(gpioMod ,ucPinNumber );
 void sweep();
 void pulse();
 void move_led();
+void button_pressed();
+void selectDifficulty(unsigned int op);
 unsigned int leds[18]={GPIO1_12,GPIO1_13,GPIO1_14,GPIO1_15,GPIO1_16,GPIO1_17,GPIO1_28,GPIO1_29,GPIO2_1};
 unsigned int button = 2;
 unsigned int difficulty = 0;
@@ -75,13 +78,19 @@ bool is_finished_selecting = false;
 
 
 void gpio3A_IsrHandler(void){
-
-	gpioClearStatusIRQ(GPIO3, 12, GRUPO_A);
+	gpioClearStatusIRQ(GPIO3, BUTTON_GPIO3_19, GRUPO_A);
+	uartClearBuffer(UART0); 
+	menuUser();
+	char op = uartGetC(UART0);
+	uartPutC(UART0, op);
+	uartPutC(UART0, '\n');
+	uartPutC(UART0, '\r');
+	selectDifficulty(op-'0');
 }
 
 void gpio3B_IsrHandler(void){
-
-	gpioClearStatusIRQ(GPIO3, 12, GRUPO_B);
+	gpioClearStatusIRQ(GPIO3, 	BUTTON_GPIO3_21, GRUPO_B);
+	button_pressed();
 }
 
 void Leds_Init(){
@@ -131,7 +140,6 @@ int main(void){
         if(game_ended==false){
 			move_led();
 			delay(delay_time);
-
 		}else if(game_ended){
 			uartPutString(UART0,"Game over\n",10);
 		if(is_win){
@@ -185,6 +193,7 @@ void sweep(){
 void pulse(){
 	for(unsigned int i=0; i<=17;i++){
 		ledON(leds[i],leds[i+1]);
+
 	}
 	delay(100);
 	for(unsigned int i=0; i<17;i++){
@@ -209,4 +218,59 @@ void move_led(){
 		current_led -= 1;
 	}
 	ledON(leds[(current_led*2)],leds[(current_led*2)]+1);
+}
+
+void button_pressed(){
+  //Serial.println("Button pressed on LED: "+String(current_led));
+	uartPutString(UART0, "Button pressed on LED: ", 23);
+	uartPutC(UART0, current_led+'0');
+	uartPutString(UART0, "\n\r", 2);
+	game_ended = true;
+	if(current_led==4){
+		is_win = true;
+	}
+	else if(current_led != 4){
+		is_win = false;
+	}
+ 	current_led = 0;
+ 	delay(500);
+}
+
+void selectDifficulty(unsigned int op){
+	switch (op){
+		case 0:
+			difficulty = 0;
+		break;
+		case 1:
+			difficulty = 100;
+		break;
+		case 2:
+			difficulty = 200;
+		break;
+		case 3:
+			difficulty = 300;
+		break;
+		case 4:
+			difficulty = 400;
+		break;
+		case 5:
+			difficulty = 500;
+		break;
+		case 6:
+			difficulty = 600;
+		break;
+		case 7:
+			difficulty = 700;
+		break;
+		case 8:
+			difficulty = 800;
+		break;
+		case 9:
+			difficulty = 900;
+		break;	
+	default:
+		uartPutString(UART0,"Please, enter a number from 0 to 9!\n\r", 37);
+		gpio3A_IsrHandler();
+		return;
+	}
 }
