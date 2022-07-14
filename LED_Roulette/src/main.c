@@ -103,22 +103,28 @@ void gpio3B_IsrHandler(void){
 
 void Leds_Init(){
 	//multiplexacao do modulo do pino referente aos leds como saida
-	for(unsigned int x=0; x<=16; x+=2){
+	for(unsigned int x=0; x<=17; x+=2){
 		gpioPinMuxSetup(leds[x],leds[x+1], OUTPUT);
 	}
 
 	//setar direcao do pino
-	for(unsigned int x=0; x<=16; x+=2){
+	for(unsigned int x=0; x<=17; x+=2){
 		gpioSetDirection(leds[x],leds[x+1], OUTPUT);
 		ledOFF(leds[x],leds[x+1]);
 	}
 }
 void Buttons_Init(){
-	for(unsigned int i = BUTTON_GPIO3_19; i <= BUTTON_GPIO3_21; i+=2){
-		gpioPinMuxSetup(GPIO3, i, INPUT);
-		gpioSetDirection(GPIO3, i, INPUT);
-		gpioSetEdge(GPIO3, i, RISING);
-	}
+	// for(unsigned int i = BUTTON_GPIO3_19; i <= BUTTON_GPIO3_21; i+=2){
+	// 	gpioPinMuxSetup(GPIO3, i, INPUT);
+	// 	gpioSetDirection(GPIO3, i, INPUT);
+	// 	gpioSetEdge(GPIO3, i, RISING);
+	// }
+	gpioPinMuxSetup(GPIO3, BUTTON_GPIO3_19, INPUT);
+	gpioPinMuxSetup(GPIO3, BUTTON_GPIO3_21, INPUT);
+	gpioSetDirection(GPIO3, BUTTON_GPIO3_19, INPUT);
+	gpioSetDirection(GPIO3, BUTTON_GPIO3_21, INPUT);
+	gpioSetEdge(GPIO3, BUTTON_GPIO3_19, RISING);
+	gpioSetEdge(GPIO3, BUTTON_GPIO3_21, RISING);
 	gpioSetPinIterrupt(GPIO3, BUTTON_GPIO3_19, GRUPO_A);
 	gpioSetPinIterrupt(GPIO3, BUTTON_GPIO3_21, GRUPO_B);
 }
@@ -132,12 +138,13 @@ void Buttons_Init(){
 int main(void){
 	/* Hardware setup */
 	disableWdt();
-	gpioSetup();	
+	gpioSetup();
 	timerSetup(true);
 	Leds_Init();
 	Buttons_Init();
 	sweep();
 	pulse();
+
 	while(true){
 		//nivel de dificuldade
 		while(is_selecting){
@@ -182,28 +189,25 @@ void ledOFF(gpioMod mod,  ucPinNumber pin ){
 }/* -----  end of function ledOFF  ----- */
 
 void sweep(){
-	for(unsigned int i=0; i<9;i++){
-		ledON(leds[i*2],leds[(i*2)+1]);
+	for(unsigned int i=0; i<=17;i+=2){
+		ledON(leds[i],leds[i+1]);
 		delay(50);
-		ledOFF(leds[i*2],leds[(i*2)+1]);
+		ledOFF(leds[i],leds[i+1]);
 	}
 	
-	for(unsigned int i=8;i>=0;i--){
-		ledON(leds[i*2],leds[(i*2)+1]);
+	for(int i=17;i>=0;i-=2){
+		ledON(leds[i-1],leds[i]);
 		delay(50);
-		ledOFF(leds[i*2],leds[(i*2)+1]);
+		ledOFF(leds[i-1],leds[i]);
 	}
 }
 
 void pulse(){
-	for(unsigned int i=0; i<9;i++){
-		ledON(leds[i*2],leds[(i*2)+1]);
-
-	}
+	for(unsigned int i=0; i<=17;i+=2)
+		ledON(leds[i],leds[i+1]);
 	delay(100);
-	for(unsigned int i=0; i<9;i++){
-		ledOFF(leds[i*2],leds[(i*2)+1]);
-	}
+	for(unsigned int i=0; i<=17;i+=2)
+		ledOFF(leds[i],leds[i+1]);
 }
 
 void move_led(){

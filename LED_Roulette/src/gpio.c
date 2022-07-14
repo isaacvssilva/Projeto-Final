@@ -172,6 +172,11 @@ void gpioSetDirection(gpioMod mod, ucPinNumber pin, pinDirection dir){
 					val_temp =  HWREG(addr_temp);		
 				break;
 				case GPIO3:
+					// GPIOx base + output enable offset, TRM 2.1 & 25.4.1.16
+					addr_temp = SOC_GPIO_3_REGS + GPIO_OE;     
+					// not overwriting previous mod setting
+					val_temp =  HWREG(addr_temp);		
+				
 				break;
 				default:	
 				break;
