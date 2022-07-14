@@ -77,24 +77,25 @@ void gpio3A_IsrHandler(void){
 		else
 			difficulty=0;
 	}else if(!is_selecting && !game_ended){
-		uartPutString(UART0, "Selecao de dificuldade:\n", 24);
+		uartPutString(UART0, "########## Selecao de dificuldade ##########\n\r", 46);
 		is_selecting=true;
 	}
 	gpioClearStatusIRQ(GPIO3, BUTTON_GPIO3_19, GRUPO_A);
 }
 
 void gpio3B_IsrHandler(void){
-	gpioClearStatusIRQ(GPIO3,BUTTON_GPIO3_21, GRUPO_B);
+	delay(50);
 	if(is_selecting){
-		uartPutString(UART0, "Dificuldade selecionada:\n", 25);
+		uartPutString(UART0, "Dificuldade selecionada: ", 25);
 		uartPutC(UART0, difficulty+'0');
+		uartPutString(UART0, "\n\r", 2);
 		delay_time=(1000-(difficulty*100));
 		is_selecting=false;
 		game_ended=false;
 	}else if(!is_selecting && !game_ended){
 		button_pressed();
 	}
-
+	gpioClearStatusIRQ(GPIO3,BUTTON_GPIO3_21, GRUPO_B);
 }
 
 /* 
@@ -112,7 +113,8 @@ int main(void){
 	Buttons_Init();
 	sweep();
 	pulse();
-
+ 
+	uartPutString(UART0,"\033[H\033[J\r", 8);
 	while(true){
 		//nivel de dificuldade
 		while(is_selecting){
@@ -123,21 +125,21 @@ int main(void){
 			move_led();
 			delay(delay_time);
 		}else if(game_ended){	
-			uartPutString(UART0,"Game over\n",10);
-		if(is_win){
-			uartPutString(UART0,"you win\n",8);
-			for(int i=0; i<5;i++){
-				pulse();
-				delay(100);
+			uartPutString(UART0,"Game over\n\r",11);
+			if(is_win){
+				uartPutString(UART0,"you win\n\r",9);
+				for(int i=0; i<5;i++){
+					pulse();
+					delay(100);
+				}
 			}
-		}
    		sweep();
 		game_ended = false;
 		is_win = false;
         	delay(2000);
 		}
-}
-return(0);
+	}
+	return(0);
 }/* ----------  end of function main  ---------- */
 
 void gpioSetup(){
