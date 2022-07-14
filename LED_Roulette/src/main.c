@@ -20,7 +20,7 @@
 #include	"uart.h"
 #include	"interrupt.h"
 #include	"timer.h"
-//#include 	"system_services.h"
+#include	"system_services.h"
 
 /*****************************************************************************
 **                INTERNAL MACRO DEFINITIONS
@@ -40,7 +40,6 @@
 #define BUTTON_GPIO3_21 21
 #define BUTTON_GPIO3_19 19
 
-
 /*****************************************************************************
 **                INTERNAL FUNCTION PROTOTYPES
 *****************************************************************************/
@@ -54,7 +53,6 @@ void sweep();
 void pulse();
 void move_led();
 void button_pressed();
-//void selectDifficulty(unsigned int op);
 unsigned int leds[18]={GPIO1_12,GPIO1_13,GPIO1_14,GPIO1_15,GPIO1_16,GPIO1_17,GPIO1_28,GPIO1_29,GPIO2_1};
 unsigned int difficulty = 0;
 unsigned int current_led = 0;
@@ -89,7 +87,7 @@ void gpio3B_IsrHandler(void){
 		uartPutString(UART0, "Dificuldade selecionada: ", 25);
 		uartPutC(UART0, difficulty+'0');
 		uartPutString(UART0, "\n\r", 2);
-		delay_time=(1000-(difficulty*100));
+		delay_time= selectDificculty(difficulty);
 		is_selecting=false;
 		game_ended=false;
 	}else if(!is_selecting && !game_ended){
