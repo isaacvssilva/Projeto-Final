@@ -375,7 +375,7 @@ void gpioSetPinIterrupt(gpioMod mod, ucPinNumber pin, gpioIntGroup group){
  * =====================================================================================
  */
 void gpioClearStatusIRQ(gpioMod mod,  ucPinNumber pin, gpioIntGroup group){
-	unsigned int addr_temp;
+	unsigned int addr_temp, addr_temp2;
 
 	switch (mod){
 	case GPIO0:
@@ -383,29 +383,35 @@ void gpioClearStatusIRQ(gpioMod mod,  ucPinNumber pin, gpioIntGroup group){
 			addr_temp = SOC_GPIO_0_REGS+GPIO_IRQSTATUS_0;
 		else
 			addr_temp = SOC_GPIO_0_REGS+GPIO_IRQSTATUS_1;
+		addr_temp2 = SOC_GPIO_0_REGS+GPIO_DEBOUNCENABLE;
 		break;
 	case GPIO1:
 		if(!group)
 			addr_temp = SOC_GPIO_1_REGS+GPIO_IRQSTATUS_0;
 		else
-			addr_temp = SOC_GPIO_1_REGS+GPIO_IRQSTATUS_1;		
+			addr_temp = SOC_GPIO_1_REGS+GPIO_IRQSTATUS_1;
+		addr_temp2 = SOC_GPIO_1_REGS+GPIO_DEBOUNCENABLE;		
 		break;
 	case GPIO2:
 		if(!group)
 			addr_temp = SOC_GPIO_2_REGS+GPIO_IRQSTATUS_0;
 		else
 			addr_temp = SOC_GPIO_2_REGS+GPIO_IRQSTATUS_1;
+		addr_temp2 = SOC_GPIO_2_REGS+GPIO_DEBOUNCENABLE;	
 		break;
 	case GPIO3:
 		if(!group)
 			addr_temp = SOC_GPIO_3_REGS+GPIO_IRQSTATUS_0;
 		else
 			addr_temp = SOC_GPIO_3_REGS+GPIO_IRQSTATUS_1;
+		addr_temp2 = SOC_GPIO_3_REGS+GPIO_DEBOUNCENABLE;	
 		break;
 	default:
 		break;
 	}
 	HWREG(addr_temp) |= (1<<pin);
+	HWREG(addr_temp2) |= (1<<pin);
+	
 }
 
 void gpioSetEdge(gpioMod mod, ucPinNumber pin, edgeType edge){

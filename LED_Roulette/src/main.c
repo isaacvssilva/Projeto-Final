@@ -46,6 +46,8 @@
 *****************************************************************************/
 
 void gpioSetup();
+void Buttons_Init(void);
+void Leds_Init(void);
 void ledON(gpioMod  ,ucPinNumber );
 void ledOFF(gpioMod ,ucPinNumber );
 void sweep();
@@ -66,15 +68,9 @@ bool is_selecting = true;
 
 
 void gpio3A_IsrHandler(void){
-	gpioClearStatusIRQ(GPIO3, BUTTON_GPIO3_19, GRUPO_A);
-	uartClearBuffer(UART0); 
-	/*menuUser();
-	char op = uartGetC(UART0);
-	uartPutC(UART0, op);
-	uartPutC(UART0, '\n');
-	uartPutC(UART0, '\r');
-	selectDifficulty(op-'0');
-	*/
+	for(unsigned int i=0; i<=17;i+=2)
+		ledOFF(leds[i],leds[i+1]);
+	delay(50); 
 	if(is_selecting){
 		if(difficulty<8)
 			difficulty++;
@@ -84,11 +80,11 @@ void gpio3A_IsrHandler(void){
 		uartPutString(UART0, "Selecao de dificuldade:\n", 24);
 		is_selecting=true;
 	}
-
+	gpioClearStatusIRQ(GPIO3, BUTTON_GPIO3_19, GRUPO_A);
 }
 
 void gpio3B_IsrHandler(void){
-	gpioClearStatusIRQ(GPIO3, 	BUTTON_GPIO3_21, GRUPO_B);
+	gpioClearStatusIRQ(GPIO3,BUTTON_GPIO3_21, GRUPO_B);
 	if(is_selecting){
 		uartPutString(UART0, "Dificuldade selecionada:\n", 25);
 		uartPutC(UART0, difficulty+'0');
@@ -99,34 +95,6 @@ void gpio3B_IsrHandler(void){
 		button_pressed();
 	}
 
-}
-
-void Leds_Init(){
-	//multiplexacao do modulo do pino referente aos leds como saida
-	for(unsigned int x=0; x<=17; x+=2){
-		gpioPinMuxSetup(leds[x],leds[x+1], OUTPUT);
-	}
-
-	//setar direcao do pino
-	for(unsigned int x=0; x<=17; x+=2){
-		gpioSetDirection(leds[x],leds[x+1], OUTPUT);
-		ledOFF(leds[x],leds[x+1]);
-	}
-}
-void Buttons_Init(){
-	// for(unsigned int i = BUTTON_GPIO3_19; i <= BUTTON_GPIO3_21; i+=2){
-	// 	gpioPinMuxSetup(GPIO3, i, INPUT);
-	// 	gpioSetDirection(GPIO3, i, INPUT);
-	// 	gpioSetEdge(GPIO3, i, RISING);
-	// }
-	gpioPinMuxSetup(GPIO3, BUTTON_GPIO3_19, INPUT);
-	gpioPinMuxSetup(GPIO3, BUTTON_GPIO3_21, INPUT);
-	gpioSetDirection(GPIO3, BUTTON_GPIO3_19, INPUT);
-	gpioSetDirection(GPIO3, BUTTON_GPIO3_21, INPUT);
-	gpioSetEdge(GPIO3, BUTTON_GPIO3_19, RISING);
-	gpioSetEdge(GPIO3, BUTTON_GPIO3_21, RISING);
-	gpioSetPinIterrupt(GPIO3, BUTTON_GPIO3_19, GRUPO_A);
-	gpioSetPinIterrupt(GPIO3, BUTTON_GPIO3_21, GRUPO_B);
 }
 
 /* 
@@ -180,6 +148,30 @@ void gpioSetup(){
 	intcSetInterrupt(GPIOINT3B);
 }
 
+void Leds_Init(void){
+	//multiplexacao do modulo do pino referente aos leds como saida
+	for(unsigned int x=0; x<=17; x+=2){
+		gpioPinMuxSetup(leds[x],leds[x+1], OUTPUT);
+	}
+
+	//setar direcao do pino
+	for(unsigned int x=0; x<=17; x+=2){
+		gpioSetDirection(leds[x],leds[x+1], OUTPUT);
+		ledOFF(leds[x],leds[x+1]);
+	}
+}
+
+void Buttons_Init(void){
+	for(unsigned int i = BUTTON_GPIO3_19; i <= BUTTON_GPIO3_21; i+=2){
+		gpioPinMuxSetup(GPIO3, i, INPUT);
+		gpioSetDirection(GPIO3, i, INPUT);
+	}
+	gpioSetEdge(GPIO3, BUTTON_GPIO3_19, FALLING);
+	gpioSetEdge(GPIO3, BUTTON_GPIO3_21, RISING);
+	gpioSetPinIterrupt(GPIO3, BUTTON_GPIO3_19, GRUPO_A);
+	gpioSetPinIterrupt(GPIO3, BUTTON_GPIO3_21, GRUPO_B);
+}
+
 void ledON(gpioMod mod, ucPinNumber pin){
 	gpioSetPinValue(mod, pin, HIGH);	
 }/* -----  end of function ledON  ----- */
@@ -230,7 +222,6 @@ void move_led(){
 }
 
 void button_pressed(){
-  //Serial.println("Button pressed on LED: "+String(current_led));
 	uartPutString(UART0, "Button pressed on LED: ", 23);
 	uartPutC(UART0, current_led+'0');
 	uartPutString(UART0, "\n\r", 2);
@@ -244,43 +235,3 @@ void button_pressed(){
  	current_led = 0;
  	delay(500);
 }
-/*
-void selectDifficulty(unsigned int op){
-	switch (op){
-		case 0:
-			difficulty = 0;
-		break;
-		case 1:
-			difficulty =difficulty*10;
-		break;
-		case 2:
-			difficulty = 200;
-		break;
-		case 3:
-			difficulty = 300;
-		break;
-		case 4:
-			difficulty = 400;
-		break;
-		case 5:
-			difficulty = 500;
-		break;
-		case 6:
-			difficulty = 600;
-		break;
-		case 7:
-			difficulty = 700;
-		break;
-		case 8:
-			difficulty = 800;
-		break;
-		case 9:
-			difficulty = 900;
-		break;	
-	default:
-		uartPutString(UART0,"Please, enter a number from 0 to 9!\n\r", 37);
-		gpio3A_IsrHandler();
-		return;
-	}
-}
-*/
