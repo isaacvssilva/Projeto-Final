@@ -84,7 +84,7 @@ void gpio3A_IsrHandler(void){
 }
 
 void gpio3B_IsrHandler(void){
-	delay(50);
+	delay(100);
 	if(is_selecting){
 		uartPutString(UART0, "Dificuldade selecionada: ", 25);
 		uartPutC(UART0, difficulty+'0');
