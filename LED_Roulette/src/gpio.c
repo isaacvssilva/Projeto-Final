@@ -112,7 +112,9 @@ void gpioInitModule(gpioMod mod){
 					ckmSetCLKModuleRegister(CKM_PER_GPIO2_CLKCTRL, setting);
 					while((ckmGetCLKModuleRegister(CKM_PER_GPIO2_CLKCTRL) & (0x3<<16)) != 0) 
 				break;
-			case GPIO3:	
+			case GPIO3:
+				ckmSetCLKModuleRegister(CKM_PER_GPIO3_CLKCTRL, setting);
+				while((ckmGetCLKModuleRegister(CKM_PER_GPIO3_CLKCTRL) & (0x3<<16)) != 0) 	
 				break;
 			default:
 			// TODO: raise error (not possible, checked mod before: /mod)

@@ -29,10 +29,13 @@ void intcSetInterrupt(ARMCortex_A8Interrupts typeInterrupt){
         break;
     case 1:
         addr_temp = INTC_MIR_CLEAR1;
+        break;
     case 2:
         addr_temp = INTC_MIR_CLEAR2;
+        break;
     case 3:
         addr_temp = INTC_MIR_CLEAR3;
+        break;
     default:
         break;
     }
