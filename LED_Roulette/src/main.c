@@ -75,6 +75,7 @@ void gpio3A_IsrHandler(void){
 		else
 			difficulty=0;
 	}else if(!is_selecting && !game_ended){
+		uartPutString(UART0,"\033[H\033[J\r", 8);
 		uartPutString(UART0, "########## Selecao de dificuldade ##########\n\r", 46);
 		is_selecting=true;
 	}
@@ -87,7 +88,7 @@ void gpio3B_IsrHandler(void){
 		uartPutString(UART0, "Dificuldade selecionada: ", 25);
 		uartPutC(UART0, difficulty+'0');
 		uartPutString(UART0, "\n\r", 2);
-		delay_time= selectDificculty(difficulty);
+		delay_time= (1000-((difficulty+1)*100));
 		is_selecting=false;
 		game_ended=false;
 	}else if(!is_selecting && !game_ended){
@@ -113,6 +114,7 @@ int main(void){
 	pulse();
  
 	uartPutString(UART0,"\033[H\033[J\r", 8);
+	uartPutString(UART0, "########## Selecao de dificuldade ##########\n\r", 46);
 	while(true){
 		//nivel de dificuldade
 		while(is_selecting){
@@ -222,6 +224,7 @@ void move_led(){
 }
 
 void button_pressed(){
+	uartClearBuffer(UART0);
 	uartPutString(UART0, "Button pressed on LED: ", 23);
 	uartPutC(UART0, current_led+'0');
 	uartPutString(UART0, "\n\r", 2);
