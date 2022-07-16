@@ -28,4 +28,4 @@ Este projeto desenvolvido na disciplina de Técnicas de Programação para Siste
 
  ---
 
-### By: [Isaac Vinícius](www.linkedin.com/in/isaacvinicius), [Hugo Bessa](linkedin.com/in/hugo-santos-da-costa-bessa-0287951b0), [Gislan Souza](https://www.linkedin.com/in/gislan-souza-silva-772b74236).
+### By: [Isaac Vinícius]https://(www.linkedin.com/in/isaacvinicius), [Hugo Bessa](https://linkedin.com/in/hugo-santos-da-costa-bessa-0287951b0), [Gislan Souza](https://www.linkedin.com/in/gislan-souza-silva-772b74236).
