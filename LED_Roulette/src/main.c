@@ -62,9 +62,6 @@ bool game_ended = false;
 bool is_win = false;
 bool is_selecting = true;
 
-/*-----------------------FUNCOES PROVISORIAS--------------------------------------------*/
-
-
 void gpio3A_IsrHandler(void){
 	for(unsigned int i=0; i<=17;i+=2)
 		ledOFF(leds[i],leds[i+1]);
@@ -229,6 +226,7 @@ void button_pressed(){
 	uartPutC(UART0, current_led+'0');
 	uartPutString(UART0, "\n\r", 2);
 	game_ended = true;
+
 	if(current_led==4){
 		is_win = true;
 	}
