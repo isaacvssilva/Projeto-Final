@@ -18,7 +18,7 @@ O objetivo do jogo é tentar acertar o LED central, evitando os demais LEDs. Foi
 
 ### **Finalidade:**
 
-Este projeto desenvolvido na disciplina de Técnicas de Programação para Sistemas Embarcados I (TPSE-I), consiste em aplicar todos os conhecimentos aprendido em aula, como a configuração e utilização de GPIOs, Interrupções, Timers, em sistemas embarcados.
+Este projeto desenvolvido na disciplina de Técnicas de Programação para Sistemas Embarcados I (TPSE I), consiste em aplicar todos os conhecimentos aprendido em aula, como a configuração e utilização de GPIOs, Interrupções, Timers, em sistemas embarcados.
 
 ## Registros do Funcionamento do jogo
 
